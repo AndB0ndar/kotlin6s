@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">kotlin6s</string>
+<!-- Log In -->
+    <string name="authorization_message">Авторизация</string>
+    <string name="welcome_message">Добро пожаловать!</string>
+    <string name="username_hint">Имя</string>
+    <string name="password_hint">Пароль</string>
+    <string name="login_button">Вход</string>
+    <string name="sign_up_message">Нет аккаунта?</string>
+    <string name="sign_up_button">Регистрация</string>
+<!-- Sign Up -->
+    <string name="first_name_hint">Имя</string>
+    <string name="last_name_hint">Фамилиля</string>
+    <string name="group_hint">Группа</string>
+    <string name="email_hint">Почта</string>
+    <string name="confirm_password_hint">Подтверждение пароля</string>
+    <string name="create_account_button">Создать аккаунт</string>
+    <string name="back_button">Назад</string>
+    <string name="new_account_message">Новый аккаунт</string>
+    <string name="queue_list">Список очередей</string>
+    <string name="search_hint">Поиск</string>
+    <string name="add_queue">Добавить очередь</string>
+    <string name="delete_button_label">Удалить</string>
+    <string name="your_account_message">Ваш аккаунт</string>
+    <string name="save_button">Сохранить</string>
+    <string name="new_queue_message">Новая Очередь</string>
+    <string name="queue_name_hint">Название</string>
+    <string name="subject_hint">Предмет</string>
+    <string name="info_hint">Инфорация</string>
+    <string name="queue_message">Очередь</string>
+    <string name="add_button_label">Добавиться</string>
+    <string name="remove_button_label">Удалить</string>
+</resources>

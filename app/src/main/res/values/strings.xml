@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">kotlin6s</string>
+    <!-- Log In -->
+    <string name="authorization_message">Authorization</string>
+    <string name="welcome_message">Welcom!</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="login_button">Log In</string>
+    <string name="sign_up_message">Don\'t have an account ?</string>
+    <string name="sign_up_button">Sign Up</string>
+    <!-- Sign Up -->
+    <string name="new_account_message">New Account</string>
+    <string name="first_name_hint">First Name</string>
+    <string name="last_name_hint">Last Name</string>
+    <string name="group_hint">Group</string>
+    <string name="email_hint">Email</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="create_account_button">Create Account</string>
+    <string name="back_button">Back</string>
+    <!-- Home -->
+    <string name="queue_list">List of Queue</string>
+    <string name="search_hint">Search</string>
+    <string name="add_queue">Add Queue</string>
+    <!-- Item Queue -->
+    <string name="delete_button_label">Remove</string>
+    <!-- Profile -->
+    <string name="your_account_message">Your Account</string>
+    <string name="save_button">Save</string>
+    <!-- Profile -->
+    <string name="new_queue_message">New Queue</string>
+    <string name="queue_name_hint">Queue name</string>
+    <string name="subject_hint">Subject</string>
+    <string name="info_hint">Info</string>
+    <!-- Queue -->
+    <string name="queue_message">Queue</string>
+    <string name="add_button_label">Add</string>
+    <string name="remove_button_label">Remove</string>
+
+</resources>
