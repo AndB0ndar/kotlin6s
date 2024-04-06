@@ -7,12 +7,20 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.kotlin6s.adapter.QueueListAdapter
 import com.example.kotlin6s.databinding.ActivityHomeBinding
+import com.example.kotlin6s.model.GroupResponse
+import com.example.kotlin6s.model.ScheduleItem
+import com.example.kotlin6s.viewmodule.HomeViewModel
+import java.util.Calendar
+
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
+    private lateinit var groupViewModel: HomeViewModel
 
     private lateinit var queueAdapter: QueueListAdapter
     private val queueList: MutableList<String> = mutableListOf()
@@ -21,15 +29,20 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        groupViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+
 
         binding.editTextSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                binding.buttonClear.visibility = View.INVISIBLE
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (s.isNullOrEmpty()) {
                     binding.buttonClear.visibility = View.INVISIBLE
+                    queueAdapter.filter("")
                 } else {
                     binding.buttonClear.visibility = View.VISIBLE
+                    queueAdapter.filter(s.toString().trim())
                 }
             }
             override fun afterTextChanged(s: Editable?) {
@@ -43,30 +56,74 @@ class HomeActivity : AppCompatActivity() {
         binding.recyclerViewQueueList.layoutManager = LinearLayoutManager(this)
         queueAdapter = QueueListAdapter(queueList)
         binding.recyclerViewQueueList.adapter = queueAdapter
-
         queueAdapter.setOnClickListener(object : QueueListAdapter.OnClickListener {
             override fun onClick(position: Int) {
                 navigateToQueue()
             }
         })
 
-        populateQueueList()
+        fetchQueueData()
 
         binding.buttonAddQueue.setOnClickListener {
             navigateToAddQueue()
         }
-
         binding.imageViewProfile.setOnClickListener {
             navigateToProfile()
         }
     }
 
-    private fun populateQueueList() {
-        queueList.add("Очередь 1")
-        queueList.add("Очередь 2")
-        queueList.add("Очередь 3")
+    private fun fetchThisWeekLessons(groupResponseList: List<GroupResponse?>): List<ScheduleItem> {
+        val thisWeekLessons = mutableListOf<ScheduleItem>()
+        val isEvenWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) % 2 == 0
 
-        queueAdapter.notifyDataSetChanged()
+        Log.d("HomeActivity", "isEvenWeek $isEvenWeek")
+
+        for (groupResponse in groupResponseList) {
+            groupResponse?.let {
+                for (daySchedule in it.schedule) {
+                    val lessons = if (isEvenWeek) daySchedule.even else daySchedule.odd
+                    for (lessonList in lessons) {
+                        for (lesson in lessonList) {
+                            if (lesson.weeks.isNullOrEmpty() || lesson.weeks.contains("1")) {
+                                thisWeekLessons.add(lesson)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return thisWeekLessons
+    }
+
+    private fun fetchQueueData() {
+        Log.d("HomeActivity", "Response")
+        groupViewModel.getGroupData("ИКБО-06-21").observe(this, Observer { groupResponse ->
+            groupResponse?.let {
+                queueList.clear()
+                Log.d("HomeActivity", "START")
+                val thisWeekLessons = fetchThisWeekLessons(groupResponse)
+                for (lesson in thisWeekLessons) {
+                    if (!queueList.contains(lesson.name)) {
+                        Log.d("HomeActivity", lesson.name)
+                        queueList.add(lesson.name)
+                    }
+                }
+                Log.d("HomeActivity", queueList.size.toString())
+
+                queueList.add("example item")
+
+                queueAdapter.notifyDataSetChanged()
+                queueAdapter.filter("")
+            }
+        })
+        groupViewModel.getError().observe(this, Observer { error ->
+            if (error.isNullOrEmpty()) {
+                Log.d("HomeActivity", "groupResponse ERROR")
+                binding.recyclerViewQueueList.visibility = View.GONE
+                binding.layoutError.visibility = View.VISIBLE
+            }
+        })
     }
 
     private fun navigateToAddQueue() {

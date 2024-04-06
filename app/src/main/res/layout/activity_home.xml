@@ -54,19 +54,47 @@
         android:layout_marginTop="@dimen/margin_small"
         android:backgroundTint="@color/blue"
         android:text="Clear"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/editTextSearch"
         app:layout_constraintTop_toBottomOf="@+id/editTextSearch" />
+
+    <RelativeLayout
+        android:id="@+id/layoutError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/buttonAddQueue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextSearch">
+
+        <TextView
+            android:id="@+id/textViewError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Error" />
+
+        <Button
+            android:id="@+id/buttonRetry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/blue"
+            android:layout_below="@id/textViewError"
+            android:text="Retry" />
+    </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewQueueList"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:visibility="visible"
         android:layout_marginVertical="@dimen/margin_medium"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/buttonAddQueue"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonClear" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextSearch" />
 
     <Button
         android:id="@+id/buttonAddQueue"
