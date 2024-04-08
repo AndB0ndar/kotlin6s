@@ -34,11 +34,10 @@ class HomeActivity : AppCompatActivity() {
 
         binding.editTextSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                binding.buttonClear.visibility = View.INVISIBLE
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (s.isNullOrEmpty()) {
-                    binding.buttonClear.visibility = View.INVISIBLE
+                    binding.buttonClear.visibility = View.GONE
                     queueAdapter.filter("")
                 } else {
                     binding.buttonClear.visibility = View.VISIBLE
@@ -51,6 +50,9 @@ class HomeActivity : AppCompatActivity() {
 
         binding.buttonClear.setOnClickListener {
             binding.editTextSearch.text.clear()
+        }
+        binding.buttonRetry.setOnClickListener {
+            fetchQueueData()
         }
 
         binding.recyclerViewQueueList.layoutManager = LinearLayoutManager(this)
@@ -98,7 +100,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun fetchQueueData() {
         Log.d("HomeActivity", "Response")
-        groupViewModel.getGroupData("ИКБО-06-21").observe(this, Observer { groupResponse ->
+        groupViewModel.getGroupData("ИКБ-06-21").observe(this, Observer { groupResponse ->
             groupResponse?.let {
                 queueList.clear()
                 Log.d("HomeActivity", "START")
@@ -115,6 +117,10 @@ class HomeActivity : AppCompatActivity() {
 
                 queueAdapter.notifyDataSetChanged()
                 queueAdapter.filter("")
+                if (queueList.isEmpty())
+                    binding.textViewError.visibility = View.VISIBLE
+                else
+                    binding.textViewError.visibility = View.GONE
             }
         })
         groupViewModel.getError().observe(this, Observer { error ->
