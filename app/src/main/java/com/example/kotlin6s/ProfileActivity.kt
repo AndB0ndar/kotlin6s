@@ -28,6 +28,10 @@ class ProfileActivity : AppCompatActivity() {
         binding.imageBack.setOnClickListener {
             navigateToHome()
         }
+
+        binding.themeSwitcher.setOnCheckedChangeListener { switcher, checked ->
+            (applicationContext as App).switchTheme(checked)
+        }
     }
 
     private fun navigateToHome() {

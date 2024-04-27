@@ -34,6 +34,7 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_large"
@@ -41,19 +42,19 @@
         android:layout_marginEnd="@dimen/margin_large"
         app:layout_constraintBottom_toTopOf="@+id/buttonSignUp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textViewAuthorization">
+        app:layout_constraintTop_toBottomOf="@id/textViewAuthorization"
+        app:layout_constraintVertical_bias="0.2">
 
         <LinearLayout
             android:id="@+id/linearName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_small"
             android:orientation="horizontal"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginBottom="@dimen/margin_small">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <EditText
                 android:id="@+id/editTextFirstName"
@@ -61,26 +62,26 @@
                 android:layout_height="@dimen/edit_text_height"
                 android:layout_marginTop="@dimen/margin_small"
                 android:layout_marginEnd="@dimen/margin_small"
+                android:layout_weight="1"
                 android:background="@drawable/edittext_bg"
                 android:hint="@string/first_name_hint"
-                android:textColorHint="@color/black"
                 android:inputType="text"
                 android:paddingStart="@dimen/padding_medium"
                 android:paddingEnd="@dimen/padding_medium"
-                android:layout_weight="1"/>
+                android:textColorHint="@color/black" />
 
             <EditText
                 android:id="@+id/editTextLastName"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/edit_text_height"
                 android:layout_marginTop="@dimen/margin_small"
+                android:layout_weight="1"
                 android:background="@drawable/edittext_bg"
                 android:hint="@string/last_name_hint"
-                android:textColorHint="@color/black"
                 android:inputType="text"
                 android:paddingStart="@dimen/padding_medium"
                 android:paddingEnd="@dimen/padding_medium"
-                android:layout_weight="1"/>
+                android:textColorHint="@color/black" />
         </LinearLayout>
 
         <EditText
@@ -90,13 +91,13 @@
             android:layout_marginTop="@dimen/margin_small"
             android:background="@drawable/edittext_bg"
             android:hint="@string/group_hint"
-            android:textColorHint="@color/black"
             android:inputType="text"
             android:paddingStart="@dimen/padding_medium"
             android:paddingEnd="@dimen/padding_medium"
-            app:layout_constraintTop_toBottomOf="@id/linearName"
+            android:textColorHint="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@id/linearName" />
 
         <EditText
             android:id="@+id/editTextEmail"
@@ -105,14 +106,25 @@
             android:layout_marginTop="@dimen/margin_small"
             android:background="@drawable/edittext_bg"
             android:hint="@string/email_hint"
-            android:textColorHint="@color/black"
             android:paddingStart="@dimen/padding_medium"
             android:paddingEnd="@dimen/padding_medium"
-            app:layout_constraintTop_toBottomOf="@id/editTextGroup"
+            android:textColorHint="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@id/editTextGroup" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/themeSwitcher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_large"
+        android:layout_marginHorizontal="60dp"
+        android:text="Темная тема"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout2" />
 
     <Button
         android:id="@+id/buttonSignUp"

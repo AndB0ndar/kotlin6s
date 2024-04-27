@@ -1,7 +1,10 @@
 package com.example.kotlin6s
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -11,6 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.kotlin6s.adapter.QueueListAdapter
+import com.example.kotlin6s.adapter.SearchHistoryAdapter
 import com.example.kotlin6s.databinding.ActivityHomeBinding
 import com.example.kotlin6s.model.GroupResponse
 import com.example.kotlin6s.model.ScheduleItem
@@ -25,47 +29,103 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var queueAdapter: QueueListAdapter
     private val queueList: MutableList<String> = mutableListOf()
 
+
+    private var searchHandler = Handler(Looper.getMainLooper())
+    private var searchRunnable = Runnable { searchRequest() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         groupViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+        searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
 
 
+        //
+        // search history
+        //
+        val searchHistory = getSearchHistory()
+        if (searchHistory.isNotEmpty()) {
+            binding.recyclerViewSearchHistory.layoutManager = LinearLayoutManager(this)
+            val historyAdapter = SearchHistoryAdapter(searchHistory)
+            binding.recyclerViewSearchHistory.adapter = historyAdapter
+            historyAdapter.setOnClickListener(object : SearchHistoryAdapter.OnClickListener {
+                override fun onClick(query: String) {
+                    binding.editTextSearch.setText(query)
+                }
+            })
+        }
+        binding.buttonClearHistory.setOnClickListener {
+            clearSearchHistory()
+            binding.historyLayout.visibility = View.GONE
+        }
+
+        //
+        // search
+        //
         binding.editTextSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s.isNullOrEmpty()) {
+                val query = s.toString().trim()
+                if (query.isNullOrEmpty()) {
                     binding.buttonClear.visibility = View.GONE
-                    queueAdapter.filter("")
+                    queueAdapter.clear()
                 } else {
                     binding.buttonClear.visibility = View.VISIBLE
-                    queueAdapter.filter(s.toString().trim())
+                    queueAdapter.filter(query)
                 }
+                queueAdapter.filter(s.toString())
             }
             override fun afterTextChanged(s: Editable?) {
             }
         })
-
+        binding.editTextSearch.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                if (searchHistory.isNotEmpty()) {
+                    binding.historyLayout.visibility = View.VISIBLE
+                }
+            } else {
+                binding.historyLayout.visibility = View.GONE
+            }
+        }
         binding.buttonClear.setOnClickListener {
             binding.editTextSearch.text.clear()
         }
+
+        //
+        // placeholder
+        //
+        binding.editTextRequest.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchDebounce()
+            }
+            override fun afterTextChanged(s: Editable?) {
+            }
+        })
         binding.buttonRetry.setOnClickListener {
-            fetchQueueData()
+            searchRequest()
+            //fetchQueueData("ИКБО-06-21")
         }
 
+        //
+        // RecycleView
+        //
         binding.recyclerViewQueueList.layoutManager = LinearLayoutManager(this)
         queueAdapter = QueueListAdapter(queueList)
         binding.recyclerViewQueueList.adapter = queueAdapter
         queueAdapter.setOnClickListener(object : QueueListAdapter.OnClickListener {
-            override fun onClick(position: Int) {
-                navigateToQueue()
+            override fun onClick(position: String?) {
+                navigateToQueue(position!!)
+                addSearchQuery(position)
             }
         })
 
-        fetchQueueData()
-
+        //
+        // navigation
+        //
         binding.buttonAddQueue.setOnClickListener {
             navigateToAddQueue()
         }
@@ -77,8 +137,6 @@ class HomeActivity : AppCompatActivity() {
     private fun fetchThisWeekLessons(groupResponseList: List<GroupResponse?>): List<ScheduleItem> {
         val thisWeekLessons = mutableListOf<ScheduleItem>()
         val isEvenWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) % 2 == 0
-
-        Log.d("HomeActivity", "isEvenWeek $isEvenWeek")
 
         for (groupResponse in groupResponseList) {
             groupResponse?.let {
@@ -98,36 +156,43 @@ class HomeActivity : AppCompatActivity() {
         return thisWeekLessons
     }
 
-    private fun fetchQueueData() {
-        Log.d("HomeActivity", "Response")
-        groupViewModel.getGroupData("ИКБ-06-21").observe(this, Observer { groupResponse ->
+    private fun fetchQueueData(groupName: String) {
+        binding.layoutRequest.visibility = View.GONE
+        binding.progressBar.visibility = View.VISIBLE
+
+        groupViewModel.getGroupData(groupName).observe(this, Observer { groupResponse ->
             groupResponse?.let {
                 queueList.clear()
-                Log.d("HomeActivity", "START")
                 val thisWeekLessons = fetchThisWeekLessons(groupResponse)
                 for (lesson in thisWeekLessons) {
                     if (!queueList.contains(lesson.name)) {
-                        Log.d("HomeActivity", lesson.name)
                         queueList.add(lesson.name)
                     }
                 }
-                Log.d("HomeActivity", queueList.size.toString())
 
                 queueList.add("example item")
 
                 queueAdapter.notifyDataSetChanged()
-                queueAdapter.filter("")
-                if (queueList.isEmpty())
+                queueAdapter.clear()
+                if (queueList.isEmpty()) {
                     binding.textViewError.visibility = View.VISIBLE
-                else
+                    binding.recyclerViewQueueList.visibility = View.GONE
+                } else {
                     binding.textViewError.visibility = View.GONE
+                    binding.layoutRequest.visibility = View.GONE
+                    binding.recyclerViewQueueList.visibility = View.VISIBLE
+                    binding.editTextSearch.visibility = View.VISIBLE
+                }
             }
         })
+
+        binding.progressBar.visibility = View.GONE
+
         groupViewModel.getError().observe(this, Observer { error ->
             if (error.isNullOrEmpty()) {
-                Log.d("HomeActivity", "groupResponse ERROR")
                 binding.recyclerViewQueueList.visibility = View.GONE
-                binding.layoutError.visibility = View.VISIBLE
+                binding.editTextSearch.visibility = View.GONE
+                binding.layoutRequest.visibility = View.VISIBLE
             }
         })
     }
@@ -144,15 +209,11 @@ class HomeActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToQueue() {
-        val intent = Intent(this, QueueActivity::class.java)
+    private fun navigateToQueue(groupName: String) {
         Log.d("HomeActivity", "Go Queue")
+        val intent = Intent(this, QueueActivity::class.java)
+        intent.putExtra("group", groupName)
         startActivity(intent)
-    }
-
-    companion object {
-        const val EDIT_TEXT_STATE_KEY = "EDIT_TEXT_STATE_KEY"
-        const val SEARCH_DEF = ""
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -164,5 +225,55 @@ class HomeActivity : AppCompatActivity() {
         super.onRestoreInstanceState(savedInstanceState)
         val editTextState = savedInstanceState.getString(EDIT_TEXT_STATE_KEY, SEARCH_DEF)
         binding.editTextSearch.setText(editTextState)
+    }
+
+    fun addSearchQuery(query: String?) {
+        var searchHistory: MutableList<String?> = getSearchHistory()
+
+        searchHistory.remove(query)
+        searchHistory.add(0, query)
+
+        if (searchHistory.size > MAX_HISTORY_SIZE) {
+            searchHistory = searchHistory.subList(0, MAX_HISTORY_SIZE)
+        }
+
+        val sharedPrefs = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
+        val editor = sharedPrefs?.edit()
+        editor?.putStringSet(SEARCH_HISTORY_KEY, HashSet(searchHistory))
+        editor?.apply()
+    }
+
+    fun getSearchHistory(): MutableList<String?> {
+        val preferences = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
+        val historySet = preferences.getStringSet(SEARCH_HISTORY_KEY, HashSet<String>())
+
+        return ArrayList(historySet)
+    }
+
+    fun clearSearchHistory() {
+        val preferences = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
+        val editor = preferences.edit()
+        editor.remove(SEARCH_HISTORY_KEY)
+        editor.apply()
+    }
+
+    private fun searchRequest() {
+        val query = binding.editTextRequest.text.toString().trim()
+        fetchQueueData(query)
+    }
+    private fun searchDebounce() {
+        searchHandler.removeCallbacks(searchRunnable)
+        searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+    }
+
+    companion object {
+        const val EDIT_TEXT_STATE_KEY = "EDIT_TEXT_STATE_KEY"
+        const val SEARCH_DEF = ""
+
+        private const val HISTORY_PREFERENCES = "history_preferences"
+        private const val SEARCH_HISTORY_KEY = "search_history"
+        private const val MAX_HISTORY_SIZE = 10
+
+        private const val SEARCH_DEBOUNCE_DELAY = 3000L
     }
 }

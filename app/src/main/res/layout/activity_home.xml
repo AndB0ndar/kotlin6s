@@ -32,20 +32,60 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/editTextSearch"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/edit_text_height"
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/searchLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_small"
+        android:visibility="visible"
         android:background="@drawable/search_bg"
-        android:hint="@string/search_hint"
-        android:textColorHint="@color/black"
-        android:inputType="text"
-        android:paddingStart="@dimen/padding_medium"
-        android:paddingEnd="@dimen/padding_medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewQueueList" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewQueueList">
+
+        <EditText
+            android:id="@+id/editTextSearch"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/edit_text_height"
+            android:hint="@string/search_hint"
+            android:inputType="text"
+            android:paddingStart="@dimen/padding_medium"
+            android:paddingEnd="@dimen/padding_medium"
+            android:visibility="gone"
+            android:textColorHint="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/history_layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/grey"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@+id/editTextSearch"
+            app:layout_constraintStart_toStartOf="@+id/editTextSearch"
+            app:layout_constraintTop_toBottomOf="@+id/editTextSearch">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewSearchHistory"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/buttonClearHistory"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:backgroundTint="@color/blue"
+                android:text="Clear"
+                app:layout_constraintEnd_toEndOf="@+id/recyclerViewSearchHistory"
+                app:layout_constraintTop_toBottomOf="@+id/recyclerViewSearchHistory" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
         android:id="@+id/buttonClear"
@@ -55,8 +95,8 @@
         android:backgroundTint="@color/blue"
         android:text="Clear"
         android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@+id/editTextSearch"
-        app:layout_constraintTop_toBottomOf="@+id/editTextSearch" />
+        app:layout_constraintEnd_toEndOf="@+id/searchLayout"
+        app:layout_constraintTop_toBottomOf="@+id/searchLayout" />
 
     <TextView
         android:id="@+id/textViewError"
@@ -65,18 +105,18 @@
         android:text="Result is empty"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:visibility="invisible"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/buttonAddQueue"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonClear"/>
 
-    <RelativeLayout
-        android:id="@+id/layoutError"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutRequest"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:visibility="invisible"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/buttonAddQueue"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -86,23 +126,49 @@
             android:id="@+id/textViewError0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Error" />
+            android:text="Find"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+            android:id="@+id/editTextRequest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/search_hint"
+            android:inputType="text"
+            android:padding="@dimen/margin_small"
+            android:textColorHint="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewError0" />
 
         <Button
             android:id="@+id/buttonRetry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/blue"
-            android:layout_below="@id/textViewError0"
-            android:text="Retry" />
-    </RelativeLayout>
+            android:text="Retry"
+            app:layout_constraintTop_toBottomOf="@+id/editTextRequest" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/black"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/buttonAddQueue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchLayout" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewQueueList"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="visible"
         android:layout_marginVertical="@dimen/margin_medium"
+        android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/buttonAddQueue"
         app:layout_constraintEnd_toEndOf="parent"

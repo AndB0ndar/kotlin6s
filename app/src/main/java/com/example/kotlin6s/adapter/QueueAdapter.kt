@@ -9,24 +9,45 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlin6s.R
 
 
-class QueueAdapter(private val queueList: MutableList<String>) :
-    RecyclerView.Adapter<QueueAdapter.QueueViewHolder>() {
+class QueueAdapter(private val queueList: MutableList<String>) : RecyclerView.Adapter<QueueAdapter.QueueViewHolder>() {
+    private val filteredList: MutableList<String> = mutableListOf()
+    init {
+        filteredList.addAll(queueList)
+    }
 
     class QueueViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textViewLabel: TextView = itemView.findViewById(R.id.textViewLabel)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QueueAdapter.QueueViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QueueViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_pos, parent, false)
-        return QueueAdapter.QueueViewHolder(view)
+        return QueueViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: QueueAdapter.QueueViewHolder, position: Int) {
-        holder.textViewLabel.text = queueList[position]
+    override fun onBindViewHolder(holder: QueueViewHolder, position: Int) {
+        val item = filteredList[position]
+        holder.textViewLabel.text = item
     }
 
     override fun getItemCount(): Int {
-        return queueList.size
+        return filteredList.size
+    }
+
+    fun clear() {
+        filteredList.addAll(queueList)
+    }
+
+    fun filter(query: String) {
+        filteredList.clear()
+        if (query.isNotEmpty()) {
+            val queryLowercase = query.lowercase()
+            for (item in queueList) {
+                if (item.lowercase().contains(queryLowercase)) {
+                    filteredList.add(item)
+                }
+            }
+        }
+        notifyDataSetChanged()
     }
 }

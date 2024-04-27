@@ -7,7 +7,6 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlin6s.R
-import java.util.Locale
 
 
 class QueueListAdapter(private val queueList: MutableList<String>) : RecyclerView.Adapter<QueueListAdapter.QueueViewHolder>() {
@@ -29,7 +28,7 @@ class QueueListAdapter(private val queueList: MutableList<String>) : RecyclerVie
         }
 
         holder.itemView.setOnClickListener {
-            onClickListener?.onClick(position)
+            onClickListener?.onClick(item)
         }
     }
 
@@ -44,11 +43,13 @@ class QueueListAdapter(private val queueList: MutableList<String>) : RecyclerVie
         this.onClickListener = onClickListener
     }
 
+    fun clear() {
+        filteredList.addAll(queueList)
+    }
+
     fun filter(query: String) {
         filteredList.clear()
-        if (query.isEmpty()) {
-            filteredList.addAll(queueList)
-        } else {
+        if (query.isNotEmpty()) {
             val queryLowercase = query.lowercase()
             for (item in queueList) {
                 if (item.lowercase().contains(queryLowercase)) {
@@ -60,10 +61,10 @@ class QueueListAdapter(private val queueList: MutableList<String>) : RecyclerVie
     }
 
     interface OnClickListener {
-        fun onClick(position: Int)
+        fun onClick(position: String?)
     }
 
-    class QueueViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class QueueViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textViewLabel: TextView = itemView.findViewById(R.id.textViewLabel)
         val buttonDelete: Button = itemView.findViewById(R.id.buttonDelete)
     }
