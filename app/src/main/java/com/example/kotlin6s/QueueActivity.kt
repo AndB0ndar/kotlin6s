@@ -6,65 +6,64 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.kotlin6s.adapter.QueueAdapter
-import com.example.kotlin6s.adapter.QueueListAdapter
-import com.example.kotlin6s.adapter.SearchHistoryAdapter
+import com.example.kotlin6s.adapter.QueueItemAdapter
 import com.example.kotlin6s.databinding.ActivityQueueBinding
-import com.example.kotlin6s.model.GroupResponse
-import com.example.kotlin6s.model.ScheduleItem
-import com.example.kotlin6s.viewmodule.HomeViewModel
-import com.example.kotlin6s.viewmodule.QueueViewModel
-import java.util.Calendar
+import com.example.kotlin6s.model.api.QueueItemResponse
+import com.example.kotlin6s.service.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class QueueActivity : AppCompatActivity() {
     private lateinit var binding: ActivityQueueBinding
-    private lateinit var viewModel: QueueViewModel
 
-    private lateinit var queueAdapter: QueueAdapter
-    private val queueList: MutableList<String> = mutableListOf()
-    private lateinit var groupName: String
+    private lateinit var queueAdapter: QueueItemAdapter
+    private var queueItemList: MutableList<QueueItemResponse> = mutableListOf()
+    private var currentFilter: String = ""
+    private var queueId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityQueueBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        viewModel = ViewModelProvider(this)[QueueViewModel::class.java]
 
-        groupName = intent.getStringExtra("group").toString()
-//        fetchQueueData(groupName)
-        fetchQueueData("ИКБО-06-21")
+        queueId = intent.getIntExtra("queueId", -1)
+        AuthManager.getToken()?.let {
+            fetchQueues()
+        }
 
         //
         // RecyclerView
         //
         binding.recyclerViewQueueList.layoutManager = LinearLayoutManager(this)
-        queueAdapter = QueueAdapter(queueList)
+        queueAdapter = QueueItemAdapter(queueItemList)
         binding.recyclerViewQueueList.adapter = queueAdapter
 
         //
         // search
         //
         binding.editTextSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = s.toString().trim()
-                if (query.isNullOrEmpty()) {
+                currentFilter = query
+                if (query.isEmpty()) {
                     binding.buttonClear.visibility = View.GONE
-                    queueAdapter.clear()
                 } else {
                     binding.buttonClear.visibility = View.VISIBLE
-                    queueAdapter.filter(query)
                 }
-                queueAdapter.filter(s.toString())
+                queueAdapter.filter(query)
             }
-            override fun afterTextChanged(s: Editable?) {
-            }
+            override fun afterTextChanged(s: Editable?) {}
         })
+
         binding.buttonClear.setOnClickListener {
             binding.editTextSearch.text.clear()
             queueAdapter.clear()
@@ -74,56 +73,77 @@ class QueueActivity : AppCompatActivity() {
         binding.imageBack.setOnClickListener {
             navigateToHome()
         }
+
+
         binding.buttonAdd.setOnClickListener {
+            RetrofitInstance.api.addQueueItem(queueId).enqueue(object : Callback<Int> {
+                override fun onResponse(call: Call<Int>, response: Response<Int>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let {
+                            if (it >= 0) {
+                                fetchQueues()
+                            } else {
+                                Toast.makeText(this@QueueActivity, "Add failed", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(this@QueueActivity, "Response failed", Toast.LENGTH_LONG).show()
+                    }
+                }
+                override fun onFailure(call: Call<Int>, t: Throwable) {
+                    Toast.makeText(this@QueueActivity, "Error: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            })
         }
 
         binding.buttonRemove.setOnClickListener {
-        }
-    }
-
-    private fun fetchThisWeekLessons(groupResponseList: List<GroupResponse?>): List<ScheduleItem> {
-        val thisWeekLessons = mutableListOf<ScheduleItem>()
-        val isEvenWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) % 2 == 0
-
-        for (groupResponse in groupResponseList) {
-            groupResponse?.let {
-                for (daySchedule in it.schedule) {
-                    val lessons = if (isEvenWeek) daySchedule.even else daySchedule.odd
-                    for (lessonList in lessons) {
-                        for (lesson in lessonList) {
-                            if (lesson.weeks.isNullOrEmpty() || lesson.weeks.contains("1")) {
-                                thisWeekLessons.add(lesson)
+            RetrofitInstance.api.deleteQueueItem(queueId).enqueue(object : Callback<Boolean> {
+                override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let {
+                            if (it) {
+                                fetchQueues()
+                            } else {
+                                Toast.makeText(this@QueueActivity, "Remove failed: $it", Toast.LENGTH_LONG).show()
                             }
                         }
+                    } else {
+                        Toast.makeText(this@QueueActivity, "Response failed", Toast.LENGTH_LONG).show()
                     }
+                }
+                override fun onFailure(call: Call<Boolean>, t: Throwable) {
+                    Toast.makeText(this@QueueActivity, "Error: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            })
+        }
+    }
+
+    private fun fetchQueues() {
+        CoroutineScope(Dispatchers.IO).launch {
+            withContext(Dispatchers.Main) {
+                binding.recyclerViewQueueList.visibility = View.GONE
+            }
+            try {
+                val queueItems = RetrofitInstance.api.getQueueById(queueId).toMutableList()
+                withContext(Dispatchers.Main) {
+                    queueItemList.clear()
+                    queueItemList.addAll(queueItems)
+                    queueAdapter.filter(currentFilter)
+                    Log.d("QueueActivity", queueItemList.toString())
+                    binding.recyclerViewQueueList.visibility = View.VISIBLE
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    binding.recyclerViewQueueList.visibility = View.GONE
                 }
             }
         }
-        return thisWeekLessons
-    }
-
-    private fun fetchQueueData(groupName: String) {
-        viewModel.getGroupData(groupName).observe(this, Observer { groupResponse ->
-            groupResponse?.let {
-                queueList.clear()
-                val thisWeekLessons = fetchThisWeekLessons(groupResponse)
-                for (lesson in thisWeekLessons) {
-                    if (!queueList.contains(lesson.name)) {
-                        queueList.add(lesson.name)
-                    }
-                }
-                queueList.add("example item")
-
-                queueAdapter.notifyDataSetChanged()
-                queueAdapter.clear()
-            }
-        })
     }
 
     private fun navigateToHome() {
         val intent = Intent(this, HomeActivity::class.java)
         Log.d("QueueActivity", "Go Home")
-        intent.putExtra("group", groupName)
         startActivity(intent)
     }
 }

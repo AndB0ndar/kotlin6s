@@ -7,65 +7,74 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlin6s.R
+import com.example.kotlin6s.model.api.Queue
+import androidx.recyclerview.widget.DiffUtil
 
+class QueueListAdapter(private val queueList: MutableList<Queue>, private val token: String?) : RecyclerView.Adapter<QueueListAdapter.QueueViewHolder>() {
+    private var onItemClickListener: OnItemClickListener? = null
 
-class QueueListAdapter(private val queueList: MutableList<String>) : RecyclerView.Adapter<QueueListAdapter.QueueViewHolder>() {
-    private var onClickListener: OnClickListener? = null
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Queue>() {
+            override fun areItemsTheSame(oldItem: Queue, newItem: Queue): Boolean =
+                oldItem.id == newItem.id
 
-    private val filteredList: MutableList<String> = mutableListOf()
-
-    init {
-        filteredList.addAll(queueList)
-    }
-
-    override fun onBindViewHolder(holder: QueueViewHolder, position: Int) {
-        val item = filteredList[position]
-        holder.textViewLabel.text = item
-
-        holder.buttonDelete.setOnClickListener {
-            filteredList.removeAt(holder.adapterPosition)
-            notifyItemRemoved(holder.adapterPosition)
-        }
-
-        holder.itemView.setOnClickListener {
-            onClickListener?.onClick(item)
+            override fun areContentsTheSame(oldItem: Queue, newItem: Queue): Boolean =
+                oldItem == newItem
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QueueViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_queue, parent, false)
-        return QueueViewHolder(view)
+        val itemView =
+            LayoutInflater.from(parent.context).inflate(R.layout.item_queue, parent, false)
+        return QueueViewHolder(itemView)
     }
 
-    override fun getItemCount(): Int = filteredList.size
+    override fun getItemCount(): Int = queueList.size
 
-    fun setOnClickListener(onClickListener: OnClickListener) {
-        this.onClickListener = onClickListener
-    }
-
-    fun clear() {
-        filteredList.addAll(queueList)
-    }
-
-    fun filter(query: String) {
-        filteredList.clear()
-        if (query.isNotEmpty()) {
-            val queryLowercase = query.lowercase()
-            for (item in queueList) {
-                if (item.lowercase().contains(queryLowercase)) {
-                    filteredList.add(item)
-                }
-            }
-        }
-        notifyDataSetChanged()
-    }
-
-    interface OnClickListener {
-        fun onClick(position: String?)
+    override fun onBindViewHolder(holder: QueueViewHolder, position: Int) {
+        val currentItem = queueList[position]
+        holder.bind(currentItem)
     }
 
     inner class QueueViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textViewLabel: TextView = itemView.findViewById(R.id.textViewLabel)
-        val buttonDelete: Button = itemView.findViewById(R.id.buttonDelete)
+        private val textViewQueueName: TextView = itemView.findViewById(R.id.textViewQueueName)
+        private val textQueueId: TextView = itemView.findViewById(R.id.queueId)
+        private val buttonDelete: Button = itemView.findViewById(R.id.buttonDelete)
+
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val queue = queueList[position]
+                    onItemClickListener?.onItemClick(queue)
+                }
+            }
+            buttonDelete.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val queue = queueList[position]
+                    if (queue.creatorToken == token) {
+                        onItemClickListener?.onButtonDelete(queue, position)
+                    } else {
+                        buttonDelete.visibility = View.INVISIBLE
+                    }
+                }
+            }
+        }
+
+        fun bind(queue: Queue) {
+            textViewQueueName.text = queue.queueName
+            textQueueId.text = queue.id.toString()
+        }
+    }
+
+    fun setOnClickListener(onClickListener: OnItemClickListener) {
+        this.onItemClickListener = onClickListener
+    }
+
+    interface OnItemClickListener {
+        fun onItemClick(queue: Queue)
+        fun onButtonDelete(queue: Queue, position: Int)
     }
 }
+

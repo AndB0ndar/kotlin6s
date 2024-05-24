@@ -8,7 +8,7 @@
     android:layout_margin="@dimen/margin_large"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SignUpActivity">
+    tools:context=".RegisterActivity">
 
     <ImageView
         android:id="@+id/imageBack"
@@ -39,7 +39,7 @@
         android:layout_marginStart="@dimen/margin_large"
         android:layout_marginTop="@dimen/margin_large"
         android:layout_marginEnd="@dimen/margin_large"
-        app:layout_constraintBottom_toTopOf="@+id/buttonSignUp"
+        app:layout_constraintBottom_toTopOf="@+id/registerButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.3"
         app:layout_constraintStart_toStartOf="parent"
@@ -56,7 +56,7 @@
             android:layout_marginBottom="@dimen/margin_small">
 
             <EditText
-                android:id="@+id/editTextFirstName"
+                android:id="@+id/firstNameEditText"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/edit_text_height"
                 android:layout_marginTop="@dimen/margin_small"
@@ -70,7 +70,7 @@
                 android:layout_weight="1"/>
 
             <EditText
-                android:id="@+id/editTextLastName"
+                android:id="@+id/lastNameEditText"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/edit_text_height"
                 android:layout_marginTop="@dimen/margin_small"
@@ -84,7 +84,7 @@
         </LinearLayout>
 
         <EditText
-            android:id="@+id/editTextGroup"
+            android:id="@+id/groupEditText"
             android:layout_width="0dp"
             android:layout_height="@dimen/edit_text_height"
             android:layout_marginTop="@dimen/margin_small"
@@ -99,21 +99,21 @@
             app:layout_constraintEnd_toEndOf="parent"/>
 
         <EditText
-            android:id="@+id/editTextEmail"
+            android:id="@+id/loginEditText"
             android:layout_width="0dp"
             android:layout_height="@dimen/edit_text_height"
             android:layout_marginTop="@dimen/margin_small"
             android:background="@drawable/edittext_bg"
-            android:hint="@string/email_hint"
+            android:hint="Login"
             android:textColorHint="@color/black"
             android:paddingStart="@dimen/padding_medium"
             android:paddingEnd="@dimen/padding_medium"
-            app:layout_constraintTop_toBottomOf="@id/editTextGroup"
+            app:layout_constraintTop_toBottomOf="@id/groupEditText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
         <EditText
-            android:id="@+id/editTextPassword"
+            android:id="@+id/passwordEditText"
             android:layout_width="0dp"
             android:layout_height="@dimen/edit_text_height"
             android:layout_marginTop="@dimen/margin_small"
@@ -123,28 +123,13 @@
             android:inputType="textPassword"
             android:paddingStart="@dimen/padding_medium"
             android:paddingEnd="@dimen/padding_medium"
-            app:layout_constraintTop_toBottomOf="@id/editTextEmail"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <EditText
-            android:id="@+id/editTextConfirmPassword"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/edit_text_height"
-            android:layout_marginTop="@dimen/margin_small"
-            android:background="@drawable/edittext_bg"
-            android:hint="@string/confirm_password_hint"
-            android:textColorHint="@color/black"
-            android:inputType="textPassword"
-            android:paddingStart="@dimen/padding_medium"
-            android:paddingEnd="@dimen/padding_medium"
-            app:layout_constraintTop_toBottomOf="@id/editTextPassword"
+            app:layout_constraintTop_toBottomOf="@id/loginEditText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
-        android:id="@+id/buttonSignUp"
+        android:id="@+id/registerButton"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:backgroundTint="@color/blue"

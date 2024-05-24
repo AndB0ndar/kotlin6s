@@ -58,20 +58,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <EditText
-            android:id="@+id/editTextEmail"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/edit_text_height"
-            android:layout_marginTop="@dimen/margin_small"
-            android:background="@drawable/edittext_bg"
-            android:hint="@string/subject_hint"
-            android:paddingStart="@dimen/padding_medium"
-            android:paddingEnd="@dimen/padding_medium"
-            android:textColorHint="@color/black"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editTextGroup" />
-
         <TextView
             android:id="@+id/textViewInfo"
             android:layout_width="0dp"
@@ -85,7 +71,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextEmail" />
+            app:layout_constraintTop_toBottomOf="@+id/editTextGroup" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

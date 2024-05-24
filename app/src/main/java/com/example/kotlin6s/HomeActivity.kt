@@ -3,43 +3,38 @@ package com.example.kotlin6s
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.kotlin6s.adapter.QueueListAdapter
 import com.example.kotlin6s.adapter.SearchHistoryAdapter
 import com.example.kotlin6s.databinding.ActivityHomeBinding
-import com.example.kotlin6s.model.GroupResponse
-import com.example.kotlin6s.model.ScheduleItem
-import com.example.kotlin6s.viewmodule.HomeViewModel
-import java.util.Calendar
+import com.example.kotlin6s.model.api.Queue
+import com.example.kotlin6s.service.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
-    private lateinit var groupViewModel: HomeViewModel
 
     private lateinit var queueAdapter: QueueListAdapter
-    private val queueList: MutableList<String> = mutableListOf()
+    private var queueList: MutableList<Queue> = mutableListOf()
 
-
-    private var searchHandler = Handler(Looper.getMainLooper())
-    private var searchRunnable = Runnable { searchRequest() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        groupViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
-        searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
-
 
         //
         // search history
@@ -50,8 +45,8 @@ class HomeActivity : AppCompatActivity() {
             val historyAdapter = SearchHistoryAdapter(searchHistory)
             binding.recyclerViewSearchHistory.adapter = historyAdapter
             historyAdapter.setOnClickListener(object : SearchHistoryAdapter.OnClickListener {
-                override fun onClick(query: String) {
-                    binding.editTextSearch.setText(query)
+                override fun onClick(position: String) {
+                    binding.editTextSearch.setText(position)
                 }
             })
         }
@@ -68,19 +63,19 @@ class HomeActivity : AppCompatActivity() {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = s.toString().trim()
-                if (query.isNullOrEmpty()) {
+                if (query.isEmpty()) {
                     binding.buttonClear.visibility = View.GONE
-                    queueAdapter.clear()
+//                    queueAdapter.clear()
                 } else {
                     binding.buttonClear.visibility = View.VISIBLE
-                    queueAdapter.filter(query)
+//                    queueAdapter.filter(query)
                 }
-                queueAdapter.filter(s.toString())
+//                queueAdapter.filter(s.toString())
             }
             override fun afterTextChanged(s: Editable?) {
             }
         })
-        binding.editTextSearch.setOnFocusChangeListener { view, hasFocus ->
+        binding.editTextSearch.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 if (searchHistory.isNotEmpty()) {
                     binding.historyLayout.visibility = View.VISIBLE
@@ -96,32 +91,68 @@ class HomeActivity : AppCompatActivity() {
         //
         // placeholder
         //
-        binding.editTextRequest.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchDebounce()
-            }
-            override fun afterTextChanged(s: Editable?) {
-            }
-        })
         binding.buttonRetry.setOnClickListener {
-            searchRequest()
-            //fetchQueueData("ИКБО-06-21")
+            fetchQueues()
         }
 
         //
         // RecycleView
         //
         binding.recyclerViewQueueList.layoutManager = LinearLayoutManager(this)
-        queueAdapter = QueueListAdapter(queueList)
+        queueAdapter = QueueListAdapter(queueList, AuthManager.getToken())
         binding.recyclerViewQueueList.adapter = queueAdapter
-        queueAdapter.setOnClickListener(object : QueueListAdapter.OnClickListener {
-            override fun onClick(position: String?) {
-                navigateToQueue(position!!)
-                addSearchQuery(position)
+        queueAdapter.setOnClickListener(object : QueueListAdapter.OnItemClickListener {
+            override fun onItemClick(queue: Queue) {
+                navigateToQueue(queue)
+                addSearchQuery(queue.queueName)
+            }
+
+            override fun onButtonDelete(queue: Queue, position: Int) {
+                AuthManager.getToken()?.let { token ->
+                    if (queue.creatorToken != token) {
+                        Toast.makeText(this@HomeActivity, "You are not authorized to delete this queue", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val queueDeleted = deleteQueue(queue.id)
+                        if (queueDeleted) {
+                            withContext(Dispatchers.Main) {
+                                queueList.removeAt(position)
+                                queueAdapter.notifyItemRemoved(position)
+                            }
+                        }
+                    }
+                } ?: run {
+                    Toast.makeText(this@HomeActivity, "Token not found", Toast.LENGTH_SHORT).show()
+                }
             }
         })
+
+        //
+        // connection
+        //
+        binding.buttonConnectQueue.setOnClickListener {
+            val queueIdText = binding.editTextQueueId.text.toString()
+            val queueId = queueIdText.toIntOrNull()
+
+            if (queueId != null) {
+                AuthManager.getToken()?.let { token ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val connected = connectQueue(queueId)
+                        if (connected) {
+                            fetchQueues()
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@HomeActivity, "Connected to Queue: $queueId", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                } ?: run {
+                    Toast.makeText(this@HomeActivity, "Token not found", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this@HomeActivity, "Invalid Queue ID", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         //
         // navigation
@@ -132,69 +163,119 @@ class HomeActivity : AppCompatActivity() {
         binding.imageViewProfile.setOnClickListener {
             navigateToProfile()
         }
+
+        AuthManager.getToken()?.let {
+            fetchQueues()
+        }
     }
 
-    private fun fetchThisWeekLessons(groupResponseList: List<GroupResponse?>): List<ScheduleItem> {
-        val thisWeekLessons = mutableListOf<ScheduleItem>()
-        val isEvenWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) % 2 == 0
+    private fun fetchQueues() {
+        CoroutineScope(Dispatchers.IO).launch {
+            withContext(Dispatchers.Main) {
+                binding.progressBar.visibility = View.VISIBLE
+                binding.recyclerViewQueueList.visibility = View.GONE
+                binding.layoutRequest.visibility = View.GONE
+            }
 
-        for (groupResponse in groupResponseList) {
-            groupResponse?.let {
-                for (daySchedule in it.schedule) {
-                    val lessons = if (isEvenWeek) daySchedule.even else daySchedule.odd
-                    for (lessonList in lessons) {
-                        for (lesson in lessonList) {
-                            if (lesson.weeks.isNullOrEmpty() || lesson.weeks.contains("1")) {
-                                thisWeekLessons.add(lesson)
-                            }
-                        }
-                    }
+            try {
+                val queues = RetrofitInstance.api.getAllQueues().toMutableList()
+                withContext(Dispatchers.Main) {
+                    queueList.clear()
+                    queueList.addAll(queues)
+                    queueAdapter.notifyDataSetChanged()
+
+                    binding.progressBar.visibility = View.GONE
+                    binding.recyclerViewQueueList.visibility = View.VISIBLE
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    binding.progressBar.visibility = View.GONE
+                    binding.errorMessage.text = "Request error: ${e.localizedMessage}"
+                    binding.layoutRequest.visibility = View.VISIBLE
+                    binding.recyclerViewQueueList.visibility = View.GONE
                 }
             }
         }
-
-        return thisWeekLessons
     }
 
-    private fun fetchQueueData(groupName: String) {
-        binding.layoutRequest.visibility = View.GONE
-        binding.progressBar.visibility = View.VISIBLE
+    private suspend fun deleteQueue(queueId: Int): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val response = RetrofitInstance.api.deleteQueue(queueId).execute()
+            return@withContext response.isSuccessful
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Log.e("HomeActivity", "Error delete: ${e.message}")
+                Toast.makeText(this@HomeActivity, "Error delete: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        return@withContext false
+    }
 
-        groupViewModel.getGroupData(groupName).observe(this, Observer { groupResponse ->
-            groupResponse?.let {
-                queueList.clear()
-                val thisWeekLessons = fetchThisWeekLessons(groupResponse)
-                for (lesson in thisWeekLessons) {
-                    if (!queueList.contains(lesson.name)) {
-                        queueList.add(lesson.name)
-                    }
+    private suspend fun connectQueue(queueId: Int): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val response = RetrofitInstance.api.connectQueue(queueId).execute()
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    return@withContext true
                 }
-
-                queueList.add("example item")
-
-                queueAdapter.notifyDataSetChanged()
-                queueAdapter.clear()
-                if (queueList.isEmpty()) {
-                    binding.textViewError.visibility = View.VISIBLE
-                    binding.recyclerViewQueueList.visibility = View.GONE
-                } else {
-                    binding.textViewError.visibility = View.GONE
-                    binding.layoutRequest.visibility = View.GONE
-                    binding.recyclerViewQueueList.visibility = View.VISIBLE
-                    binding.editTextSearch.visibility = View.VISIBLE
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@HomeActivity, "Failed to connect to Queue", Toast.LENGTH_SHORT).show()
                 }
             }
-        })
-
-        binding.progressBar.visibility = View.GONE
-
-        groupViewModel.getError().observe(this, Observer { error ->
-            if (error.isNullOrEmpty()) {
-                binding.recyclerViewQueueList.visibility = View.GONE
-                binding.editTextSearch.visibility = View.GONE
-                binding.layoutRequest.visibility = View.VISIBLE
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@HomeActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-        })
+        }
+        return@withContext false
+    }
+
+    fun addSearchQuery(query: String?) {
+        var searchHistory: MutableList<String?> = getSearchHistory()
+        searchHistory.remove(query)
+        searchHistory.add(0, query)
+        if (searchHistory.size > MAX_HISTORY_SIZE) {
+            searchHistory = searchHistory.subList(0, MAX_HISTORY_SIZE)
+        }
+        val sharedPrefs = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
+        val editor = sharedPrefs?.edit()
+        editor?.putStringSet(SEARCH_HISTORY_KEY, HashSet(searchHistory))
+        editor?.apply()
+    }
+
+    private fun getSearchHistory(): MutableList<String?> {
+        val preferences = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
+        val historySet = preferences.getStringSet(SEARCH_HISTORY_KEY, HashSet<String>())
+        return ArrayList(historySet!!)
+    }
+
+    private fun clearSearchHistory() {
+        val preferences = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
+        val editor = preferences.edit()
+        editor.remove(SEARCH_HISTORY_KEY)
+        editor.apply()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(EDIT_TEXT_STATE_KEY, binding.editTextSearch.text.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val editTextState = savedInstanceState.getString(EDIT_TEXT_STATE_KEY, SEARCH_DEF)
+        binding.editTextSearch.setText(editTextState)
+    }
+
+    companion object {
+        const val EDIT_TEXT_STATE_KEY = "EDIT_TEXT_STATE_KEY"
+        const val SEARCH_DEF = ""
+
+        private const val HISTORY_PREFERENCES = "history_preferences"
+        private const val SEARCH_HISTORY_KEY = "search_history"
+        private const val MAX_HISTORY_SIZE = 10
     }
 
     private fun navigateToAddQueue() {
@@ -209,71 +290,10 @@ class HomeActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToQueue(groupName: String) {
+    private fun navigateToQueue(queue: Queue) {
         Log.d("HomeActivity", "Go Queue")
         val intent = Intent(this, QueueActivity::class.java)
-        intent.putExtra("group", groupName)
+        intent.putExtra("queueId", queue.id)
         startActivity(intent)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(EDIT_TEXT_STATE_KEY, binding.editTextSearch.text.toString())
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        val editTextState = savedInstanceState.getString(EDIT_TEXT_STATE_KEY, SEARCH_DEF)
-        binding.editTextSearch.setText(editTextState)
-    }
-
-    fun addSearchQuery(query: String?) {
-        var searchHistory: MutableList<String?> = getSearchHistory()
-
-        searchHistory.remove(query)
-        searchHistory.add(0, query)
-
-        if (searchHistory.size > MAX_HISTORY_SIZE) {
-            searchHistory = searchHistory.subList(0, MAX_HISTORY_SIZE)
-        }
-
-        val sharedPrefs = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
-        val editor = sharedPrefs?.edit()
-        editor?.putStringSet(SEARCH_HISTORY_KEY, HashSet(searchHistory))
-        editor?.apply()
-    }
-
-    fun getSearchHistory(): MutableList<String?> {
-        val preferences = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
-        val historySet = preferences.getStringSet(SEARCH_HISTORY_KEY, HashSet<String>())
-
-        return ArrayList(historySet)
-    }
-
-    fun clearSearchHistory() {
-        val preferences = getSharedPreferences(HISTORY_PREFERENCES, Context.MODE_PRIVATE)
-        val editor = preferences.edit()
-        editor.remove(SEARCH_HISTORY_KEY)
-        editor.apply()
-    }
-
-    private fun searchRequest() {
-        val query = binding.editTextRequest.text.toString().trim()
-        fetchQueueData(query)
-    }
-    private fun searchDebounce() {
-        searchHandler.removeCallbacks(searchRunnable)
-        searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
-    }
-
-    companion object {
-        const val EDIT_TEXT_STATE_KEY = "EDIT_TEXT_STATE_KEY"
-        const val SEARCH_DEF = ""
-
-        private const val HISTORY_PREFERENCES = "history_preferences"
-        private const val SEARCH_HISTORY_KEY = "search_history"
-        private const val MAX_HISTORY_SIZE = 10
-
-        private const val SEARCH_DEBOUNCE_DELAY = 3000L
     }
 }

@@ -123,24 +123,11 @@
         app:layout_constraintTop_toBottomOf="@+id/buttonClear">
 
         <TextView
-            android:id="@+id/textViewError0"
+            android:id="@+id/errorMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Find"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <EditText
-            android:id="@+id/editTextRequest"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="@string/search_hint"
-            android:inputType="text"
-            android:padding="@dimen/margin_small"
-            android:textColorHint="@color/black"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewError0" />
 
         <Button
             android:id="@+id/buttonRetry"
@@ -148,7 +135,9 @@
             android:layout_height="wrap_content"
             android:backgroundTint="@color/blue"
             android:text="Retry"
-            app:layout_constraintTop_toBottomOf="@+id/editTextRequest" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/errorMessage" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ProgressBar
@@ -179,11 +168,29 @@
         android:id="@+id/buttonAddQueue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/add_queue"
         android:backgroundTint="@color/blue"
-        android:layout_marginBottom="@dimen/margin_small"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="@string/add_queue"
+        app:layout_constraintBottom_toTopOf="@+id/buttonConnectQueue"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/editTextQueueId"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Enter Queue ID"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonConnectQueue"
+        app:layout_constraintTop_toTopOf="@+id/buttonConnectQueue" />
+
+    <Button
+        android:id="@+id/buttonConnectQueue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/blue"
+        android:text="Connect to Queue"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
