@@ -19,9 +19,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class HomeActivity : AppCompatActivity() {
@@ -29,6 +26,7 @@ class HomeActivity : AppCompatActivity() {
 
     private lateinit var queueAdapter: QueueListAdapter
     private var queueList: MutableList<Queue> = mutableListOf()
+    private var currentFilter: String = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,14 +61,13 @@ class HomeActivity : AppCompatActivity() {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = s.toString().trim()
+                currentFilter = query
                 if (query.isEmpty()) {
                     binding.buttonClear.visibility = View.GONE
-//                    queueAdapter.clear()
                 } else {
                     binding.buttonClear.visibility = View.VISIBLE
-//                    queueAdapter.filter(query)
                 }
-//                queueAdapter.filter(s.toString())
+                queueAdapter.filter(query)
             }
             override fun afterTextChanged(s: Editable?) {
             }
@@ -86,7 +83,9 @@ class HomeActivity : AppCompatActivity() {
         }
         binding.buttonClear.setOnClickListener {
             binding.editTextSearch.text.clear()
+            queueAdapter.clear()
         }
+
 
         //
         // placeholder
@@ -182,7 +181,7 @@ class HomeActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     queueList.clear()
                     queueList.addAll(queues)
-                    queueAdapter.notifyDataSetChanged()
+                    queueAdapter.filter(currentFilter)
 
                     binding.progressBar.visibility = View.GONE
                     binding.recyclerViewQueueList.visibility = View.VISIBLE

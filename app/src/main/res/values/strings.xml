@@ -35,5 +35,6 @@
     <string name="queue_message">Queue</string>
     <string name="add_button_label">Add</string>
     <string name="remove_button_label">Remove</string>
+    <string name="night_theme">Night theme</string>
 
 </resources>

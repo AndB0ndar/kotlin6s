@@ -31,4 +31,5 @@
     <string name="queue_message">Очередь</string>
     <string name="add_button_label">Добавиться</string>
     <string name="remove_button_label">Удалить</string>
+    <string name="night_theme">Темная тема</string>
 </resources>

@@ -10,8 +10,9 @@ import com.example.kotlin6s.R
 import com.example.kotlin6s.model.api.Queue
 import androidx.recyclerview.widget.DiffUtil
 
-class QueueListAdapter(private val queueList: MutableList<Queue>, private val token: String?) : RecyclerView.Adapter<QueueListAdapter.QueueViewHolder>() {
+class QueueListAdapter(private val originalQueueList: MutableList<Queue>, private val token: String?) : RecyclerView.Adapter<QueueListAdapter.QueueViewHolder>() {
     private var onItemClickListener: OnItemClickListener? = null
+    private var filteredQueueList: MutableList<Queue> = originalQueueList.toMutableList()
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Queue>() {
@@ -29,11 +30,25 @@ class QueueListAdapter(private val queueList: MutableList<Queue>, private val to
         return QueueViewHolder(itemView)
     }
 
-    override fun getItemCount(): Int = queueList.size
+    override fun getItemCount(): Int = filteredQueueList.size
 
     override fun onBindViewHolder(holder: QueueViewHolder, position: Int) {
-        val currentItem = queueList[position]
+        val currentItem = filteredQueueList[position]
         holder.bind(currentItem)
+    }
+
+    fun filter(query: String) {
+        filteredQueueList = if (query.isEmpty()) {
+            originalQueueList.toMutableList()
+        } else {
+            originalQueueList.filter { it.queueName.contains(query, ignoreCase = true) }.toMutableList()
+        }
+        notifyDataSetChanged()
+    }
+
+    fun clear() {
+        filteredQueueList = originalQueueList.toMutableList()
+        notifyDataSetChanged()
     }
 
     inner class QueueViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -45,14 +60,14 @@ class QueueListAdapter(private val queueList: MutableList<Queue>, private val to
             itemView.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    val queue = queueList[position]
+                    val queue = filteredQueueList[position]
                     onItemClickListener?.onItemClick(queue)
                 }
             }
             buttonDelete.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    val queue = queueList[position]
+                    val queue = filteredQueueList[position]
                     if (queue.creatorToken == token) {
                         onItemClickListener?.onButtonDelete(queue, position)
                     } else {

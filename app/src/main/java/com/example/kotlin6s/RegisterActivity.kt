@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.kotlin6s.databinding.ActivitySignUpBinding
+import com.example.kotlin6s.databinding.ActivityRegisterBinding
 import com.example.kotlin6s.model.api.TokenResponse
 import com.example.kotlin6s.model.api.RegisterResponse
 import com.example.kotlin6s.service.RetrofitInstance
@@ -14,11 +14,11 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
-    private lateinit var binding: ActivitySignUpBinding
+    private lateinit var binding: ActivityRegisterBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySignUpBinding.inflate(layoutInflater)
+        binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.registerButton.setOnClickListener {
