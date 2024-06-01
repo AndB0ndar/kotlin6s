@@ -81,7 +81,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="35dp"
                 android:backgroundTint="@color/blue"
-                android:text="Clear"
+                android:text="@string/clear"
                 app:layout_constraintEnd_toEndOf="@+id/recyclerViewSearchHistory"
                 app:layout_constraintTop_toBottomOf="@+id/recyclerViewSearchHistory" />
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -93,7 +93,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/margin_small"
         android:backgroundTint="@color/blue"
-        android:text="Clear"
+        android:text="@string/clear"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/searchLayout"
         app:layout_constraintTop_toBottomOf="@+id/searchLayout" />
@@ -102,7 +102,7 @@
         android:id="@+id/textViewError"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Result is empty"
+        android:text="@string/result_is_empty"
         android:textSize="24sp"
         android:textStyle="bold"
         android:visibility="gone"
@@ -134,7 +134,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/blue"
-            android:text="Retry"
+            android:text="@string/retry"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/errorMessage" />
@@ -169,6 +169,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/blue"
+        android:layout_marginBottom="@dimen/margin_small"
         android:text="@string/add_queue"
         app:layout_constraintBottom_toTopOf="@+id/buttonConnectQueue"
         app:layout_constraintEnd_toEndOf="parent"
@@ -177,19 +178,23 @@
     <EditText
         android:id="@+id/editTextQueueId"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Enter Queue ID"
+        android:layout_height="@dimen/edit_text_height"
+        android:background="@drawable/login_edittext_bg"
+        android:layout_marginStart="@dimen/margin_small"
+        android:hint="@string/enter_queue_id"
         android:inputType="number"
+        android:paddingStart="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_medium"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonConnectQueue"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/buttonConnectQueue"
-        app:layout_constraintTop_toTopOf="@+id/buttonConnectQueue" />
+        app:layout_constraintStart_toEndOf="@+id/buttonConnectQueue" />
 
     <Button
         android:id="@+id/buttonConnectQueue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/blue"
-        android:text="Connect to Queue"
+        android:text="@string/connect"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

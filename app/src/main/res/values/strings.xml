@@ -6,7 +6,7 @@
     <string name="username_hint">Username</string>
     <string name="password_hint">Password</string>
     <string name="login_button">Log In</string>
-    <string name="sign_up_message">Don\'t have an account ?</string>
+    <string name="sign_up_message">Do not have an account ?</string>
     <string name="sign_up_button">Sign Up</string>
     <!-- Sign Up -->
     <string name="new_account_message">New Account</string>
@@ -18,13 +18,13 @@
     <string name="create_account_button">Create Account</string>
     <string name="back_button">Back</string>
     <!-- Home -->
-    <string name="queue_list">List of Queue</string>
+    <string name="queue_list">My Queues</string>
     <string name="search_hint">Search</string>
-    <string name="add_queue">Add Queue</string>
+    <string name="add_queue">Create New</string>
     <!-- Item Queue -->
     <string name="delete_button_label">Remove</string>
     <!-- Profile -->
-    <string name="your_account_message">Your Account</string>
+    <string name="your_account_message">Your Profile</string>
     <string name="save_button">Save</string>
     <!-- Profile -->
     <string name="new_queue_message">New Queue</string>
@@ -36,5 +36,12 @@
     <string name="add_button_label">Add</string>
     <string name="remove_button_label">Remove</string>
     <string name="night_theme">Night theme</string>
+    <string name="enter_queue_id">Enter Queue ID</string>
+    <string name="connect">Connect</string>
+    <string name="retry">Retry</string>
+    <string name="result_is_empty">Result is empty</string>
+    <string name="clear">Clear</string>
+    <string name="queue">Queue</string>
+    <string name="login">Login</string>
 
 </resources>

@@ -104,7 +104,7 @@
             android:layout_height="@dimen/edit_text_height"
             android:layout_marginTop="@dimen/margin_small"
             android:background="@drawable/edittext_bg"
-            android:hint="Login"
+            android:hint="@string/login"
             android:textColorHint="@color/black"
             android:paddingStart="@dimen/padding_medium"
             android:paddingEnd="@dimen/padding_medium"
